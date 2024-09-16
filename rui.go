@@ -12,6 +12,7 @@ import (
 func main() {
 	(&cli.App{
 		Name:                 "rui",
+		Usage:                "Personal NixOS Flake Manager",
 		Description:          "Personal NixOS Flake Manager",
 		EnableBashCompletion: true,
 		Authors: []*cli.Author{

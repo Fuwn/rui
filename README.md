@@ -51,7 +51,7 @@ rui.packages.${pkgs.system}.default
 
 ```text
 NAME:
-   rui - A new cli application
+   rui - Personal NixOS Flake Manager
 
 USAGE:
    rui [global options] command [command options]
