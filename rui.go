@@ -30,6 +30,22 @@ func main() {
 		Suggest: true,
 		Commands: []*cli.Command{
 			{
+				Name: "hs",
+				Action: func(c *cli.Context) error {
+					return c.App.Command("home").Command("switch").Run(c)
+				},
+				Hidden:      true,
+				Description: "Alias for `home switch`",
+			},
+			{
+				Name: "osw",
+				Action: func(c *cli.Context) error {
+					return c.App.Command("os").Command("switch").Run(c)
+				},
+				Hidden: true,
+				Usage:  "Alias for `os switch`",
+			},
+			{
 				Name: "home",
 				Subcommands: []*cli.Command{
 					{
