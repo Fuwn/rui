@@ -33,7 +33,8 @@ func main() {
 				Name: "home",
 				Subcommands: []*cli.Command{
 					{
-						Name: "switch",
+						Name:    "switch",
+						Aliases: []string{"sw"},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:  "impure",
@@ -83,7 +84,8 @@ func main() {
 				Name: "os",
 				Subcommands: []*cli.Command{
 					{
-						Name: "switch",
+						Name:    "switch",
+						Aliases: []string{"sw"},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name: "force-nixos-rebuild",
