@@ -3,7 +3,7 @@
 Rui is my personal NixOS flake manager. It isn't very unique to my system at the
 moment, so anyone can use it.
 
-## Some Useful Commands
+## Useful Commands
 
 - `rui edit` - Open and edit your flake directory from anywhere
 - `rui home/os switch` - Rebuild and switch your home or OS flake configuration
@@ -19,7 +19,7 @@ opening the flake directory, but falls back to `EDITOR` if it isn't set.
 
 ## Installation
 
-### Add to Flake Inputs
+### Add to Flake Inputs (for Flakes Users)
 
 ```nix
 {
@@ -33,10 +33,10 @@ opening the flake directory, but falls back to `EDITOR` if it isn't set.
 ### Add to System or Home Manager Packages
 
 ```nix
+# For flakes users
 rui.packages.${pkgs.system}.default
 
-# or
-
+# For non-flakes users
 (import (
   pkgs.fetchFromGitHub {
     owner = "Fuwn";
