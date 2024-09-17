@@ -10,6 +10,30 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+type Configuration struct {
+	Notify bool `json:"notify"`
+}
+
+var configuration Configuration
+
+func init() {
+	configurationPath := os.Getenv("RUI_CONFIG")
+
+	if configurationPath == "" {
+		configurationPath = os.Getenv("XDG_CONFIG_HOME") + "/rui/config.json"
+	}
+
+	content, err := os.ReadFile(configurationPath)
+
+	if err != nil {
+		return
+	}
+
+	if err := json.Unmarshal(content, &configuration); err != nil {
+		return
+	}
+}
+
 func main() {
 	(&cli.App{
 		Name:                 "rui",
@@ -206,23 +230,7 @@ func Command(name string, args ...string) error {
 	return cmd.Run()
 }
 
-type Configuration struct {
-	Notify bool `json:"notify"`
-}
-
 func Notify(message string) error {
-	content, err := os.ReadFile(os.Getenv("XDG_CONFIG_HOME"))
-
-	if err != nil {
-		return err
-	}
-
-	var configuration Configuration
-
-	if err := json.Unmarshal(content, &configuration); err != nil {
-		return err
-	}
-
 	notifySend, err := exec.LookPath("notify-send")
 
 	if err != nil {
