@@ -89,7 +89,7 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							_, err := exec.LookPath("nh")
+							nh, err := exec.LookPath("nh")
 							extraArgs := []string{}
 
 							if err := Notify("Queued home switch"); err != nil {
@@ -101,7 +101,7 @@ func main() {
 							}
 
 							if err == nil && !c.Bool("force-home-manager") {
-								err = Command("nh", append([]string{"home", "switch", "--"},
+								err = Command(nh, append([]string{"home", "switch", "--"},
 									extraArgs...)...)
 							} else {
 								user := c.String("user")
@@ -166,20 +166,19 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							_, err := exec.LookPath("nh")
+							nh, err := exec.LookPath("nh")
 
 							if err := Notify("Queued OS switch"); err != nil {
 								return err
 							}
 
 							if err == nil && !c.Bool("force-nixos-rebuild") {
-								err = Command("nh", "os", "switch")
+								err = Command(nh, "os", "switch")
 							} else {
-								_, err = exec.LookPath("doas")
 								escalator := "sudo"
 
-								if err == nil {
-									escalator = "doas"
+								if doas, err := exec.LookPath("doas"); err != nil {
+									escalator = doas
 								}
 
 								hostname := c.String("hostname")
