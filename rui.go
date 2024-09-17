@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -67,24 +68,34 @@ func main() {
 							_, err := exec.LookPath("nh")
 							extraArgs := []string{}
 
+							if err := Notify("Queued home switch"); err != nil {
+								return err
+							}
+
 							if c.Bool("impure") {
 								extraArgs = []string{"--impure"}
 							}
 
 							if err == nil && !c.Bool("force-home-manager") {
-								return Command("nh", append([]string{"home", "switch", "--"},
+								err = Command("nh", append([]string{"home", "switch", "--"},
+									extraArgs...)...)
+							} else {
+								user := c.String("user")
+
+								if user == "" {
+									user = os.Getenv("USER")
+								}
+
+								err = Command("home-manager", append([]string{"switch",
+									"--flake", fmt.Sprintf("%s#%s", os.Getenv("FLAKE"), user)},
 									extraArgs...)...)
 							}
 
-							user := c.String("user")
-
-							if user == "" {
-								user = os.Getenv("USER")
+							if err != nil {
+								return Notify(fmt.Sprintf("Failed to switch home: %s", err.Error()))
 							}
 
-							return Command("home-manager", append([]string{"switch",
-								"--flake", fmt.Sprintf("%s#%s", os.Getenv("FLAKE"), user)},
-								extraArgs...)...)
+							return Notify("Home switched")
 						},
 					},
 					{
@@ -133,29 +144,39 @@ func main() {
 						Action: func(c *cli.Context) error {
 							_, err := exec.LookPath("nh")
 
+							if err := Notify("Queued OS switch"); err != nil {
+								return err
+							}
+
 							if err == nil && !c.Bool("force-nixos-rebuild") {
-								return Command("nh", "os", "switch")
-							}
+								err = Command("nh", "os", "switch")
+							} else {
+								_, err = exec.LookPath("doas")
+								escalator := "sudo"
 
-							_, err = exec.LookPath("doas")
-							escalator := "sudo"
-
-							if err == nil {
-								escalator = "doas"
-							}
-
-							hostname := c.String("hostname")
-
-							if hostname == "" {
-								hostname, err = os.Hostname()
-
-								if err != nil {
-									return err
+								if err == nil {
+									escalator = "doas"
 								}
+
+								hostname := c.String("hostname")
+
+								if hostname == "" {
+									hostname, err = os.Hostname()
+
+									if err != nil {
+										return err
+									}
+								}
+
+								err = Command(escalator, "nixos-rebuild", "switch", "--flake",
+									fmt.Sprintf("%s#%s", os.Getenv("FLAKE"), hostname))
 							}
 
-							return Command(escalator, "nixos-rebuild", "switch", "--flake",
-								fmt.Sprintf("%s#%s", os.Getenv("FLAKE"), hostname))
+							if err != nil {
+								return Notify(fmt.Sprintf("Failed to switch OS: %s", err.Error()))
+							}
+
+							return Notify("OS switched")
 						},
 					},
 				},
@@ -183,4 +204,34 @@ func Command(name string, args ...string) error {
 	cmd.Stderr = os.Stderr
 
 	return cmd.Run()
+}
+
+type Configuration struct {
+	Notify bool `json:"notify"`
+}
+
+func Notify(message string) error {
+	content, err := os.ReadFile(os.Getenv("XDG_CONFIG_HOME"))
+
+	if err != nil {
+		return err
+	}
+
+	var configuration Configuration
+
+	if err := json.Unmarshal(content, &configuration); err != nil {
+		return err
+	}
+
+	notifySend, err := exec.LookPath("notify-send")
+
+	if err != nil {
+		return nil
+	}
+
+	if configuration.Notify {
+		return Command(notifySend, "Rui", message)
+	}
+
+	return nil
 }
