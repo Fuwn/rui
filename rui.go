@@ -89,9 +89,29 @@ func main() {
 					},
 					{
 						Name: "news",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name: "user",
+							},
+							&cli.BoolFlag{
+								Name:  "impure",
+								Value: true,
+							},
+						},
 						Action: func(c *cli.Context) error {
-							return Command("home-manager", "news", "--flake",
-								os.Getenv("FLAKE"), "--impure")
+							target := os.Getenv("FLAKE")
+							extraArgs := []string{}
+
+							if c.Bool("impure") {
+								extraArgs = []string{"--impure"}
+							}
+
+							if user := c.String("user"); user != "" {
+								target = fmt.Sprintf("%s#%s", target, user)
+							}
+
+							return Command("home-manager", append([]string{"news", "--flake",
+								target}, extraArgs...)...)
 						},
 					},
 				},
