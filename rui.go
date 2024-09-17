@@ -11,7 +11,9 @@ import (
 )
 
 type Configuration struct {
-	Notify bool `json:"notify"`
+	Notify bool   `json:"notify"`
+	Editor string `json:"editor"`
+	Flake  string `json:"flake"`
 }
 
 var configuration Configuration
@@ -110,8 +112,14 @@ func main() {
 									user = os.Getenv("USER")
 								}
 
+								flake := configuration.Flake
+
+								if flake == "" {
+									flake = os.Getenv("FLAKE")
+								}
+
 								err = Command("home-manager", append([]string{"switch",
-									"--flake", fmt.Sprintf("%s#%s", os.Getenv("FLAKE"), user)},
+									"--flake", fmt.Sprintf("%s#%s", flake, user)},
 									extraArgs...)...)
 							}
 
@@ -134,7 +142,12 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							target := os.Getenv("FLAKE")
+							flake := configuration.Flake
+
+							if flake == "" {
+								flake = os.Getenv("FLAKE")
+							}
+
 							extraArgs := []string{}
 
 							if c.Bool("impure") {
@@ -142,11 +155,11 @@ func main() {
 							}
 
 							if user := c.String("user"); user != "" {
-								target = fmt.Sprintf("%s#%s", target, user)
+								flake = fmt.Sprintf("%s#%s", flake, user)
 							}
 
 							return Command("home-manager", append([]string{"news", "--flake",
-								target}, extraArgs...)...)
+								flake}, extraArgs...)...)
 						},
 					},
 				},
@@ -191,8 +204,14 @@ func main() {
 									}
 								}
 
+								flake := configuration.Flake
+
+								if flake == "" {
+									flake = os.Getenv("FLAKE")
+								}
+
 								err = Command(escalator, "nixos-rebuild", "switch", "--flake",
-									fmt.Sprintf("%s#%s", os.Getenv("FLAKE"), hostname))
+									fmt.Sprintf("%s#%s", flake, hostname))
 							}
 
 							if err != nil {
@@ -207,13 +226,22 @@ func main() {
 			{
 				Name: "edit",
 				Action: func(c *cli.Context) error {
-					editor, err := os.LookupEnv("FLAKE_EDITOR")
+					var found bool
 
-					if err {
-						return Command(editor, os.Getenv("FLAKE"))
+					editor := configuration.Editor
+					flake := configuration.Flake
+
+					if flake == "" {
+						flake = os.Getenv("FLAKE")
 					}
 
-					return Command(os.Getenv("EDITOR"), os.Getenv("FLAKE"))
+					if editor == "" {
+						if editor, found = os.LookupEnv("FLAKE_EDITOR"); !found {
+							editor = os.Getenv("EDITOR")
+						}
+					}
+
+					return Command(editor, flake)
 				},
 			},
 		},
