@@ -37,6 +37,11 @@
           src = pkgs.lib.cleanSource ./.;
           vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
 
+          ldflags = [
+            "-s"
+            "-w"
+          ];
+
           meta = with pkgs.lib; {
             description = "Personal NixOS Flake Manager";
             homepage = "https://github.com/Fuwn/rui";
