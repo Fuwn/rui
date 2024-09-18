@@ -94,7 +94,7 @@ func main() {
 							nh, err := exec.LookPath("nh")
 							extraArgs := []string{}
 
-							if err := Notify("Queued home switch"); err != nil {
+							if err := notify("Queued home switch"); err != nil {
 								return err
 							}
 
@@ -103,7 +103,7 @@ func main() {
 							}
 
 							if err == nil && !c.Bool("force-home-manager") {
-								err = Command(nh, append([]string{"home", "switch", "--"},
+								err = command(nh, append([]string{"home", "switch", "--"},
 									extraArgs...)...)
 							} else {
 								user := c.String("user")
@@ -118,16 +118,16 @@ func main() {
 									flake = os.Getenv("FLAKE")
 								}
 
-								err = Command("home-manager", append([]string{"switch",
+								err = command("home-manager", append([]string{"switch",
 									"--flake", fmt.Sprintf("%s#%s", flake, user)},
 									extraArgs...)...)
 							}
 
 							if err != nil {
-								return Notify(fmt.Sprintf("Failed to switch home: %s", err.Error()))
+								return notify(fmt.Sprintf("Failed to switch home: %s", err.Error()))
 							}
 
-							return Notify("Home switched")
+							return notify("Home switched")
 						},
 					},
 					{
@@ -158,7 +158,7 @@ func main() {
 								flake = fmt.Sprintf("%s#%s", flake, user)
 							}
 
-							return Command("home-manager", append([]string{"news", "--flake",
+							return command("home-manager", append([]string{"news", "--flake",
 								flake}, extraArgs...)...)
 						},
 					},
@@ -181,12 +181,12 @@ func main() {
 						Action: func(c *cli.Context) error {
 							nh, err := exec.LookPath("nh")
 
-							if err := Notify("Queued OS switch"); err != nil {
+							if err := notify("Queued OS switch"); err != nil {
 								return err
 							}
 
 							if err == nil && !c.Bool("force-nixos-rebuild") {
-								err = Command(nh, "os", "switch")
+								err = command(nh, "os", "switch")
 							} else {
 								escalator := "sudo"
 
@@ -210,15 +210,15 @@ func main() {
 									flake = os.Getenv("FLAKE")
 								}
 
-								err = Command(escalator, "nixos-rebuild", "switch", "--flake",
+								err = command(escalator, "nixos-rebuild", "switch", "--flake",
 									fmt.Sprintf("%s#%s", flake, hostname))
 							}
 
 							if err != nil {
-								return Notify(fmt.Sprintf("Failed to switch OS: %s", err.Error()))
+								return notify(fmt.Sprintf("Failed to switch OS: %s", err.Error()))
 							}
 
-							return Notify("OS switched")
+							return notify("OS switched")
 						},
 					},
 				},
@@ -241,14 +241,14 @@ func main() {
 						}
 					}
 
-					return Command(editor, flake)
+					return command(editor, flake)
 				},
 			},
 		},
 	}).Run(os.Args)
 }
 
-func Command(name string, args ...string) error {
+func command(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -257,7 +257,7 @@ func Command(name string, args ...string) error {
 	return cmd.Run()
 }
 
-func Notify(message string) error {
+func notify(message string) error {
 	notifySend, err := exec.LookPath("notify-send")
 
 	if err != nil {
@@ -265,7 +265,7 @@ func Notify(message string) error {
 	}
 
 	if configuration.Notify {
-		return Command(notifySend, "Rui", message)
+		return command(notifySend, "Rui", message)
 	}
 
 	return nil
