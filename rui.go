@@ -80,10 +80,6 @@ func main() {
 						Aliases: []string{"sw"},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								Name:  "impure",
-								Value: true,
-							},
-							&cli.BoolFlag{
 								Name: "force-home-manager",
 							},
 							&cli.StringFlag{
@@ -92,14 +88,10 @@ func main() {
 						},
 						Action: func(c *cli.Context) error {
 							nh, err := exec.LookPath("nh")
-							extraArgs := []string{}
+							extraArgs := c.Args().Slice()
 
 							if err := notify("Queued home switch"); err != nil {
 								return err
-							}
-
-							if c.Bool("impure") {
-								extraArgs = []string{"--impure"}
 							}
 
 							if err == nil && !c.Bool("force-home-manager") {
@@ -136,22 +128,13 @@ func main() {
 							&cli.StringFlag{
 								Name: "user",
 							},
-							&cli.BoolFlag{
-								Name:  "impure",
-								Value: true,
-							},
 						},
 						Action: func(c *cli.Context) error {
 							flake := configuration.Flake
+							extraArgs := c.Args().Slice()
 
 							if flake == "" {
 								flake = os.Getenv("FLAKE")
-							}
-
-							extraArgs := []string{}
-
-							if c.Bool("impure") {
-								extraArgs = []string{"--impure"}
 							}
 
 							if user := c.String("user"); user != "" {
