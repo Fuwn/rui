@@ -33,7 +33,7 @@
       {
         packages.default = pkgs.buildGoModule {
           pname = "rui";
-          version = "2024-09-16";
+          version = "2024.09.17";
           src = pkgs.lib.cleanSource ./.;
           vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
 
@@ -70,6 +70,44 @@
 
           buildInputs = self.checks.${system}.pre-commit-check.enabledPackages;
         };
+
+        homeManagerModules.default =
+          { config, ... }:
+          with pkgs.lib;
+          {
+            options.programs.rui = {
+              enable = mkOption {
+                type = types.bool;
+                default = false;
+              };
+
+              settings = {
+                editor = mkOption {
+                  type = types.str;
+                  default = "";
+                };
+
+                notify = mkOption {
+                  type = types.bool;
+                  default = false;
+                };
+
+                flake = mkOption {
+                  type = types.str;
+                  default = "";
+                };
+              };
+            };
+
+            config = mkIf config.programs.rui.enable {
+              home.packages = [
+                self.packages.${system}.default
+                pkgs.libnotify
+              ];
+
+              xdg.configFile."rui/config.json".text = builtins.toJSON config.programs.rui.settings;
+            };
+          };
       }
     );
 }

@@ -11,12 +11,6 @@ moment, so anyone can use it.
 - `rui home news` - Show the latest news from your Home Manager configuration
   packages
 
-Rui checks the `FLAKE` environment variable for the path to your flake
-directory.
-
-Rui looks at the `FLAKE_EDITOR` environment variable for the editor to use when
-opening the flake directory, but falls back to `EDITOR` if it isn't set.
-
 ## Installation
 
 ### Add to Flake Inputs (for Flakes Users)
@@ -30,7 +24,47 @@ opening the flake directory, but falls back to `EDITOR` if it isn't set.
 }
 ```
 
-### Add to System or Home Manager Packages
+### Add to Home Manager (Managed Configuration)
+
+This method manages the configuration for you with Nix.
+
+```nix
+# ...
+
+inputs.home-manager.lib.homeManagerConfiguration {
+  modules = [
+    inputs.rui.homeManagerModules.${builtins.currentSystem}.default
+  ];
+};
+
+# ...
+```
+
+### Configure Rui Using Home Manager
+
+```nix
+{
+  programs.rui = {
+    enable = true;
+
+    settings = {
+      # Status notifications via `notify-send`
+      notify = true;
+
+      # Rui falls back on the `FLAKE_EDITOR` and `EDITOR` environment variables
+      editor = "code";
+
+      # Rui falls back on the `FLAKE` environment variable
+      flake = "/path/to/your-flake";
+    };
+  };
+}
+```
+
+### Add to System or Home Manager Packages (Manual Configuration)
+
+Using this method, configuration is done manually by the user in the
+`$HOME/.config/rui/config.json` file.
 
 ```nix
 # For flakes users
