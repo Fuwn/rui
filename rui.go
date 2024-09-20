@@ -241,6 +241,10 @@ func command(name string, args ...string) error {
 }
 
 func notify(message string) error {
+	if os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "" {
+		return nil
+	}
+
 	notifySend, err := exec.LookPath("notify-send")
 
 	if err != nil {
