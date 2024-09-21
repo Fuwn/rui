@@ -55,6 +55,20 @@ func main() {
 			}
 		},
 		Suggest: true,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name: "allow-unfree",
+				Action: func(c *cli.Context, b bool) error {
+					state := "0"
+
+					if b {
+						state = "1"
+					}
+
+					return os.Setenv("NIXPKGS_ALLOW_UNFREE", state)
+				},
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name: "hs",
