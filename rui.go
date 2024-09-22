@@ -18,6 +18,11 @@ type Configuration struct {
 
 var configuration Configuration
 
+const (
+	Build = iota
+	Switch
+)
+
 func init() {
 	configurationPath := os.Getenv("RUI_CONFIG")
 
@@ -101,39 +106,21 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							nh, err := exec.LookPath("nh")
-							extraArgs := c.Args().Slice()
-
-							if err := notify("Queued home switch"); err != nil {
-								return err
-							}
-
-							if err == nil && !c.Bool("force-home-manager") {
-								err = command(nh, append([]string{"home", "switch", "--"},
-									extraArgs...)...)
-							} else {
-								user := c.String("user")
-
-								if user == "" {
-									user = os.Getenv("USER")
-								}
-
-								flake := configuration.Flake
-
-								if flake == "" {
-									flake = os.Getenv("FLAKE")
-								}
-
-								err = command("home-manager", append([]string{"switch",
-									"--flake", fmt.Sprintf("%s#%s", flake, user)},
-									extraArgs...)...)
-							}
-
-							if err != nil {
-								return notify(fmt.Sprintf("Failed to switch home: %s", err.Error()))
-							}
-
-							return notify("Home switched")
+							return home(c, Switch)
+						},
+					},
+					{
+						Name: "build",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "force-home-manager",
+							},
+							&cli.StringFlag{
+								Name: "user",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							return home(c, Build)
 						},
 					},
 					{
@@ -176,46 +163,21 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							nh, err := exec.LookPath("nh")
-
-							if err := notify("Queued OS switch"); err != nil {
-								return err
-							}
-
-							if err == nil && !c.Bool("force-nixos-rebuild") {
-								err = command(nh, "os", "switch")
-							} else {
-								escalator := "sudo"
-
-								if doas, err := exec.LookPath("doas"); err != nil {
-									escalator = doas
-								}
-
-								hostname := c.String("hostname")
-
-								if hostname == "" {
-									hostname, err = os.Hostname()
-
-									if err != nil {
-										return err
-									}
-								}
-
-								flake := configuration.Flake
-
-								if flake == "" {
-									flake = os.Getenv("FLAKE")
-								}
-
-								err = command(escalator, "nixos-rebuild", "switch", "--flake",
-									fmt.Sprintf("%s#%s", flake, hostname))
-							}
-
-							if err != nil {
-								return notify(fmt.Sprintf("Failed to switch OS: %s", err.Error()))
-							}
-
-							return notify("OS switched")
+							return ruiOS(c, Switch)
+						},
+					},
+					{
+						Name: "build",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "force-nixos-rebuild",
+							},
+							&cli.StringFlag{
+								Name: "hostname",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							return ruiOS(c, Build)
 						},
 					},
 				},
@@ -270,4 +232,101 @@ func notify(message string) error {
 	}
 
 	return nil
+}
+
+func actionName(action int) string {
+	if action == Build {
+		return "build"
+	}
+
+	return "switch"
+}
+
+func actionVerb(action int) string {
+	if action == Build {
+		return "built"
+	}
+
+	return "switched"
+}
+
+func home(c *cli.Context, action int) error {
+	nh, err := exec.LookPath("nh")
+	extraArgs := c.Args().Slice()
+	actionName := actionName(action)
+
+	if err := notify("Queued home " + actionName); err != nil {
+		return err
+	}
+
+	if err == nil && !c.Bool("force-home-manager") {
+		err = command(nh, append([]string{"home", actionName, "--"},
+			extraArgs...)...)
+	} else {
+		user := c.String("user")
+
+		if user == "" {
+			user = os.Getenv("USER")
+		}
+
+		flake := configuration.Flake
+
+		if flake == "" {
+			flake = os.Getenv("FLAKE")
+		}
+
+		err = command("home-manager", append([]string{actionName,
+			"--flake", fmt.Sprintf("%s#%s", flake, user)},
+			extraArgs...)...)
+	}
+
+	if err != nil {
+		return notify(fmt.Sprintf("Failed to %s home: %s", actionName, err.Error()))
+	}
+
+	return notify("Home " + actionVerb(action))
+}
+
+func ruiOS(c *cli.Context, action int) error {
+	nh, err := exec.LookPath("nh")
+	actionName := actionName(action)
+
+	if err := notify("Queued OS " + actionName); err != nil {
+		return err
+	}
+
+	if err == nil && !c.Bool("force-nixos-rebuild") {
+		err = command(nh, "os", actionName)
+	} else {
+		escalator := "sudo"
+
+		if doas, err := exec.LookPath("doas"); err != nil {
+			escalator = doas
+		}
+
+		hostname := c.String("hostname")
+
+		if hostname == "" {
+			hostname, err = os.Hostname()
+
+			if err != nil {
+				return err
+			}
+		}
+
+		flake := configuration.Flake
+
+		if flake == "" {
+			flake = os.Getenv("FLAKE")
+		}
+
+		err = command(escalator, "nixos-rebuild", actionName, "--flake",
+			fmt.Sprintf("%s#%s", flake, hostname))
+	}
+
+	if err != nil {
+		return notify(fmt.Sprintf("Failed to %s OS: %s", actionName, err.Error()))
+	}
+
+	return notify("OS " + actionVerb(action))
 }
