@@ -42,6 +42,23 @@ func init() {
 }
 
 func main() {
+	homeFlags := []cli.Flag{
+		&cli.BoolFlag{
+			Name: "force-home-manager",
+		},
+		&cli.StringFlag{
+			Name: "user",
+		},
+	}
+	osFlags := []cli.Flag{
+		&cli.BoolFlag{
+			Name: "force-nixos-rebuild",
+		},
+		&cli.StringFlag{
+			Name: "hostname",
+		},
+	}
+
 	(&cli.App{
 		Name:                 "rui",
 		Usage:                "Personal NixOS Flake Manager",
@@ -97,28 +114,14 @@ func main() {
 					{
 						Name:    "switch",
 						Aliases: []string{"sw"},
-						Flags: []cli.Flag{
-							&cli.BoolFlag{
-								Name: "force-home-manager",
-							},
-							&cli.StringFlag{
-								Name: "user",
-							},
-						},
+						Flags:   homeFlags,
 						Action: func(c *cli.Context) error {
 							return home(c, Switch)
 						},
 					},
 					{
-						Name: "build",
-						Flags: []cli.Flag{
-							&cli.BoolFlag{
-								Name: "force-home-manager",
-							},
-							&cli.StringFlag{
-								Name: "user",
-							},
-						},
+						Name:  "build",
+						Flags: homeFlags,
 						Action: func(c *cli.Context) error {
 							return home(c, Build)
 						},
@@ -154,28 +157,14 @@ func main() {
 					{
 						Name:    "switch",
 						Aliases: []string{"sw"},
-						Flags: []cli.Flag{
-							&cli.BoolFlag{
-								Name: "force-nixos-rebuild",
-							},
-							&cli.StringFlag{
-								Name: "hostname",
-							},
-						},
+						Flags:   osFlags,
 						Action: func(c *cli.Context) error {
 							return ruiOS(c, Switch)
 						},
 					},
 					{
-						Name: "build",
-						Flags: []cli.Flag{
-							&cli.BoolFlag{
-								Name: "force-nixos-rebuild",
-							},
-							&cli.StringFlag{
-								Name: "hostname",
-							},
-						},
+						Name:  "build",
+						Flags: osFlags,
 						Action: func(c *cli.Context) error {
 							return ruiOS(c, Build)
 						},
