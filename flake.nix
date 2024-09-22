@@ -41,7 +41,7 @@
       {
         packages.default = pkgs.buildGoModule {
           pname = "rui";
-          version = "2024.09.21";
+          version = "2024.09.22";
           src = pkgs.lib.cleanSource ./.;
           vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
 
