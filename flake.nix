@@ -105,6 +105,11 @@
                   default = false;
                 };
 
+                notifier = mkOption {
+                  type = types.str;
+                  default = "notify-send";
+                };
+
                 flake = mkOption {
                   type = types.str;
                   default = "";
