@@ -11,9 +11,10 @@ import (
 )
 
 type Configuration struct {
-	Notify bool   `json:"notify"`
-	Editor string `json:"editor"`
-	Flake  string `json:"flake"`
+	Notify   bool   `json:"notify"`
+	Editor   string `json:"editor"`
+	Flake    string `json:"flake"`
+	Notifier string `json:"notifier"`
 }
 
 type ActionDetails struct {
@@ -215,7 +216,13 @@ func notify(message string) error {
 		return nil
 	}
 
-	notifySend, err := exec.LookPath("notify-send")
+	notifier := configuration.Notifier
+
+	if notifier == "" {
+		notifier = "notify-send"
+	}
+
+	notifySend, err := exec.LookPath(notifier)
 
 	if err != nil {
 		return nil
