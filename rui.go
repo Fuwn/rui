@@ -16,11 +16,24 @@ type Configuration struct {
 	Flake  string `json:"flake"`
 }
 
+type ActionDetails struct {
+	Name         string
+	Verb         string
+	UsableWithNH bool
+}
+
 var configuration Configuration
 
 const (
-	Build = iota
-	Switch
+	Switch = iota
+	Boot
+	Test
+	Build
+	DryActivate
+	BuildVM
+	Instantiate
+	Generations
+	Packages
 )
 
 func init() {
@@ -41,10 +54,21 @@ func init() {
 	}
 }
 
+func subcommand(action int, aliases []string, flags []cli.Flag, commandAction func(c *cli.Context, action int) error) *cli.Command {
+	return &cli.Command{
+		Name:    actionName(action),
+		Aliases: aliases,
+		Flags:   flags,
+		Action: func(c *cli.Context) error {
+			return commandAction(c, action)
+		},
+	}
+}
+
 func main() {
 	homeFlags := []cli.Flag{
 		&cli.BoolFlag{
-			Name: "force-home-manager",
+			Name: "use-home-manager",
 		},
 		&cli.StringFlag{
 			Name: "user",
@@ -52,7 +76,7 @@ func main() {
 	}
 	osFlags := []cli.Flag{
 		&cli.BoolFlag{
-			Name: "force-nixos-rebuild",
+			Name: "use-nixos-rebuild",
 		},
 		&cli.StringFlag{
 			Name: "hostname",
@@ -111,21 +135,11 @@ func main() {
 			{
 				Name: "home",
 				Subcommands: []*cli.Command{
-					{
-						Name:    "switch",
-						Aliases: []string{"sw"},
-						Flags:   homeFlags,
-						Action: func(c *cli.Context) error {
-							return home(c, Switch)
-						},
-					},
-					{
-						Name:  "build",
-						Flags: homeFlags,
-						Action: func(c *cli.Context) error {
-							return home(c, Build)
-						},
-					},
+					subcommand(Switch, []string{"sw"}, homeFlags, home),
+					subcommand(Build, []string{}, homeFlags, home),
+					subcommand(Instantiate, []string{}, homeFlags, home),
+					subcommand(Generations, []string{"gens"}, homeFlags, home),
+					subcommand(Packages, []string{"pkgs"}, homeFlags, home),
 					{
 						Name: "news",
 						Flags: []cli.Flag{
@@ -154,21 +168,12 @@ func main() {
 			{
 				Name: "os",
 				Subcommands: []*cli.Command{
-					{
-						Name:    "switch",
-						Aliases: []string{"sw"},
-						Flags:   osFlags,
-						Action: func(c *cli.Context) error {
-							return ruiOS(c, Switch)
-						},
-					},
-					{
-						Name:  "build",
-						Flags: osFlags,
-						Action: func(c *cli.Context) error {
-							return ruiOS(c, Build)
-						},
-					},
+					subcommand(Switch, []string{"sw"}, osFlags, ruiOS),
+					subcommand(Boot, []string{}, osFlags, ruiOS),
+					subcommand(Test, []string{}, osFlags, ruiOS),
+					subcommand(Build, []string{}, osFlags, ruiOS),
+					subcommand(DryActivate, []string{"dry"}, osFlags, ruiOS),
+					subcommand(BuildVM, []string{"vm"}, osFlags, ruiOS),
 				},
 			},
 			{
@@ -224,32 +229,101 @@ func notify(message string) error {
 }
 
 func actionName(action int) string {
-	if action == Build {
-		return "build"
+	name := "switch"
+
+	switch action {
+	case Boot:
+		name = "boot"
+
+		break
+
+	case Test:
+		name = "test"
+
+		break
+
+	case Build:
+		name = "build"
+
+		break
+
+	case DryActivate:
+		name = "dry-activate"
+
+		break
+
+	case BuildVM:
+		name = "build-vm"
+
+		break
+
+	case Instantiate:
+		name = "instantiate"
+
+		break
+
+	case Generations:
+		name = "generations"
+
+		break
+
+	case Packages:
+		name = "packages"
+
+		break
 	}
 
-	return "switch"
+	return name
 }
 
-func actionVerb(action int) string {
-	if action == Build {
-		return "built"
+func actionDetails(action int) (string, string, bool) {
+	switch action {
+	case Switch:
+		return actionName(action), "switched", true
+
+	case Boot:
+		return actionName(action), "booted", false
+
+	case Test:
+		return actionName(action), "tested", false
+
+	case Build:
+		return actionName(action), "built", true
+
+	case DryActivate:
+		return actionName(action), "dry activated", false
+
+	case BuildVM:
+		return actionName(action), "VM built", false
+
+	case Instantiate:
+		return actionName(action), "instantiated", false
+
+	case Generations:
+		return actionName(action), "generations listed", false
+
+	case Packages:
+		return actionName(action), "packages shown", false
 	}
 
-	return "switched"
+	return "", "", false
 }
 
 func home(c *cli.Context, action int) error {
 	nh, err := exec.LookPath("nh")
 	extraArgs := c.Args().Slice()
-	actionName := actionName(action)
+	name, verb, usableWithNH := actionDetails(action)
 
-	if err := notify("Queued home " + actionName); err != nil {
+	if err := notify("Queued home " + name); err != nil {
 		return err
 	}
 
-	if err == nil && !c.Bool("force-home-manager") {
-		err = command(nh, append([]string{"home", actionName, "--"},
+	if err == nil && !c.Bool("use-home-manager") {
+		if !usableWithNH {
+			return fmt.Errorf("This command is not supported with nh. Use --use-home-manager to use Home Manager instead.")
+		}
+
+		err = command(nh, append([]string{"home", name, "--"},
 			extraArgs...)...)
 	} else {
 		user := c.String("user")
@@ -264,28 +338,32 @@ func home(c *cli.Context, action int) error {
 			flake = os.Getenv("FLAKE")
 		}
 
-		err = command("home-manager", append([]string{actionName,
+		err = command("home-manager", append([]string{name,
 			"--flake", fmt.Sprintf("%s#%s", flake, user)},
 			extraArgs...)...)
 	}
 
 	if err != nil {
-		return notify(fmt.Sprintf("Failed to %s home: %s", actionName, err.Error()))
+		return notify(fmt.Sprintf("Failed to %s home: %s", name, err.Error()))
 	}
 
-	return notify("Home " + actionVerb(action))
+	return notify("Home " + verb)
 }
 
 func ruiOS(c *cli.Context, action int) error {
 	nh, err := exec.LookPath("nh")
-	actionName := actionName(action)
+	name, verb, usableWithNH := actionDetails(action)
 
-	if err := notify("Queued OS " + actionName); err != nil {
+	if err := notify("Queued OS " + name); err != nil {
 		return err
 	}
 
-	if err == nil && !c.Bool("force-nixos-rebuild") {
-		err = command(nh, "os", actionName)
+	if err == nil && !c.Bool("use-nixos-rebuild") {
+		if !usableWithNH {
+			return fmt.Errorf("This command is not supported with nh. Use --use-nixos-rebuild to use nixos-rebuild instead.")
+		}
+
+		err = command(nh, "os", name)
 	} else {
 		escalator := "sudo"
 
@@ -309,13 +387,13 @@ func ruiOS(c *cli.Context, action int) error {
 			flake = os.Getenv("FLAKE")
 		}
 
-		err = command(escalator, "nixos-rebuild", actionName, "--flake",
+		err = command(escalator, "nixos-rebuild", name, "--flake",
 			fmt.Sprintf("%s#%s", flake, hostname))
 	}
 
 	if err != nil {
-		return notify(fmt.Sprintf("Failed to %s OS: %s", actionName, err.Error()))
+		return notify(fmt.Sprintf("Failed to %s OS: %s", name, err.Error()))
 	}
 
-	return notify("OS " + actionVerb(action))
+	return notify("OS " + verb)
 }

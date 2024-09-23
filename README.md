@@ -97,13 +97,14 @@ AUTHOR:
    Fuwn <contact@fuwn.me>
 
 COMMANDS:
-   home     
-   os       
-   edit     
+   home
+   os
+   edit
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --help, -h  show help
+   --allow-unfree  (default: false)
+   --help, -h      show help
 
 COPYRIGHT:
    Copyright (c) 2024-2024 Fuwn
