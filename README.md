@@ -51,6 +51,9 @@ inputs.home-manager.lib.homeManagerConfiguration {
       # Status notifications via `notify-send`
       notify = true;
 
+      # The command to use for sending notifications, view a cool example below!
+      notifier = "notify-send";
+
       # Rui falls back on the `FLAKE_EDITOR` and `EDITOR` environment variables
       editor = "code";
 
@@ -79,6 +82,34 @@ rui.packages.${pkgs.system}.default
     hash = "..."; # Use the current commit sha256 hash
   }
 )).packages.${builtins.currentSystem}.default
+```
+
+## Custom Notification Command Example
+
+Rui uses `notify-send` by default for sending notifications, but you can set
+the `notifier` configuration value to any file path. Here's an example of a
+distributed notification script that sends notifications to your phone **and**
+your PC. This can easily be adapted to send notifications to any service, e.g.,
+Telegram, Discord, other webhook receivers, etc.
+
+This example uses [Bark](https://bark.day.app/#/?id=%E6%BA%90%E7%A0%81), an
+extremely simple and easy-to-use notification service for iOS devices.
+
+```sh
+#!/usr/bin/env dash
+
+# Send a notification to your host PC
+notify-send "$1" "$2"
+
+# Send a notification to your iOS device
+curl -X "POST" "https://api.day.app/your_bark_api_key" \
+  -H 'Content-Type: application/json; charset=utf-8' \
+  --silent \
+  -d '{
+    "body": "'"${2}"'",
+    "title": "'"${1}"'",
+    "icon": "https://nixos.wiki/images/thumb/2/20/Home-nixos-logo.png/207px-Home-nixos-logo.png"
+  }'
 ```
 
 ## `--help`
