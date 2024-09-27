@@ -11,10 +11,11 @@ import (
 )
 
 type Configuration struct {
-	Notify   bool   `json:"notify"`
-	Editor   string `json:"editor"`
-	Flake    string `json:"flake"`
-	Notifier string `json:"notifier"`
+	Notify      bool   `json:"notify"`
+	Editor      string `json:"editor"`
+	Flake       string `json:"flake"`
+	Notifier    string `json:"notifier"`
+	AllowUnfree bool   `json:"allow-unfree"`
 }
 
 type ActionDetails struct {
@@ -115,6 +116,13 @@ func main() {
 					return os.Setenv("NIXPKGS_ALLOW_UNFREE", state)
 				},
 			},
+		},
+		Before: func(c *cli.Context) error {
+			if configuration.AllowUnfree {
+				c.Set("allow-unfree", "1")
+			}
+
+			return nil
 		},
 		Commands: []*cli.Command{
 			{
