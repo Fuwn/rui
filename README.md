@@ -59,6 +59,9 @@ inputs.home-manager.lib.homeManagerConfiguration {
 
       # Rui falls back on the `FLAKE` environment variable
       flake = "/path/to/your-flake";
+
+      # Allow unfree packages
+      allow-unfree = false;
     };
   };
 }

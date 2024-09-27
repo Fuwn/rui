@@ -41,7 +41,7 @@
       {
         packages.default = pkgs.buildGoModule {
           pname = "rui";
-          version = "2024.09.23";
+          version = "2024.09.27";
           src = pkgs.lib.cleanSource ./.;
           vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
 
@@ -113,6 +113,11 @@
                 flake = mkOption {
                   type = types.str;
                   default = "";
+                };
+
+                allow-unfree = mkOption {
+                  type = types.bool;
+                  default = false;
                 };
               };
             };
