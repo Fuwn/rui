@@ -45,23 +45,29 @@ inputs.home-manager.lib.homeManagerConfiguration {
 ```nix
 {
   programs.rui = {
-    enable = true;
+    enable = true; # Defaults to false
 
     settings = {
-      # Status notifications via `notify-send`
+      # Status notifications via `notify-send`; defaults to false
       notify = true;
 
-      # The command to use for sending notifications, view a cool example below!
+      # The command to use for sending notifications, view a cool example below;
+      # defaults to `notify-send`
       notifier = "notify-send";
 
       # Rui falls back on the `FLAKE_EDITOR` and `EDITOR` environment variables
+      # if `editor` is unset
       editor = "code";
 
-      # Rui falls back on the `FLAKE` environment variable
+      # Rui falls back on the `FLAKE` environment variable if `flake` is unset
       flake = "/path/to/your-flake";
 
-      # Allow unfree packages
+      # Allow unfree packages; defaults to false
       allow-unfree = false;
+
+      # Extra arguments to pass to `nixos-rebuild` and `home-manager`; defaults
+      # to [ ]
+      extra-args = [ "--impure" ];
     };
   };
 }

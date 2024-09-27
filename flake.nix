@@ -119,6 +119,11 @@
                   type = types.bool;
                   default = false;
                 };
+
+                extra-args = mkOption {
+                  type = types.listOf types.str;
+                  default = [ ];
+                };
               };
             };
 

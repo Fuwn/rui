@@ -11,11 +11,12 @@ import (
 )
 
 type Configuration struct {
-	Notify      bool   `json:"notify"`
-	Editor      string `json:"editor"`
-	Flake       string `json:"flake"`
-	Notifier    string `json:"notifier"`
-	AllowUnfree bool   `json:"allow-unfree"`
+	Notify      bool     `json:"notify"`
+	Editor      string   `json:"editor"`
+	Flake       string   `json:"flake"`
+	Notifier    string   `json:"notifier"`
+	AllowUnfree bool     `json:"allow-unfree"`
+	ExtraArgs   []string `json:"extra-args"`
 }
 
 type ActionDetails struct {
@@ -159,6 +160,8 @@ func main() {
 						Action: func(c *cli.Context) error {
 							flake := configuration.Flake
 							extraArgs := c.Args().Slice()
+
+							extraArgs = append(extraArgs, configuration.ExtraArgs...)
 
 							if flake == "" {
 								flake = os.Getenv("FLAKE")
@@ -328,6 +331,8 @@ func home(c *cli.Context, action int) error {
 	nh, err := exec.LookPath("nh")
 	extraArgs := c.Args().Slice()
 	name, verb, usableWithNH := actionDetails(action)
+
+	extraArgs = append(extraArgs, configuration.ExtraArgs...)
 
 	if err := notify("Queued home " + name); err != nil {
 		return err
