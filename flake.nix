@@ -41,7 +41,7 @@
         meta = with pkgs.lib; {
           description = "Personal NixOS Flake Manager";
           homepage = "https://github.com/Fuwn/rui";
-          license = licenses.gpl3;
+          license = licenses.gpl3Only;
           maintainers = [ maintainers.Fuwn ];
           mainPackage = "rui";
           platforms = platforms.linux;
