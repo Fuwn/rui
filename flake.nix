@@ -37,9 +37,19 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-      in
-      {
-        packages.default = pkgs.buildGoModule {
+
+        meta = with pkgs.lib; {
+          description = "Personal NixOS Flake Manager";
+          homepage = "https://github.com/Fuwn/rui";
+          license = licenses.gpl3;
+          maintainers = [ maintainers.Fuwn ];
+          mainPackage = "rui";
+          platforms = platforms.linux;
+        };
+
+        rui = pkgs.buildGoModule {
+          inherit meta;
+
           pname = "rui";
           version = "2024.09.27";
           src = pkgs.lib.cleanSource ./.;
@@ -49,20 +59,23 @@
             "-s"
             "-w"
           ];
-
-          meta = with pkgs.lib; {
-            description = "Personal NixOS Flake Manager";
-            homepage = "https://github.com/Fuwn/rui";
-            license = licenses.gpl3;
-            maintainers = [ maintainers.Fuwn ];
-            mainPackage = "rui";
-            platforms = platforms.linux;
-          };
+        };
+      in
+      {
+        packages = {
+          default = rui;
+          rui = self.packages.${system}.default;
         };
 
-        apps.default = {
-          type = "app";
-          program = "${self.packages.${system}.default}/bin/rui";
+        apps = {
+          default = {
+            inherit meta;
+
+            type = "app";
+            program = "${self.packages.${system}.default}/bin/rui";
+          };
+
+          rui = self.apps.${system}.default;
         };
 
         formatter = nixpkgs.legacyPackages."${system}".nixfmt-rfc-style;
@@ -81,7 +94,9 @@
         devShells.default = nixpkgs.legacyPackages.${system}.mkShell {
           inherit (self.checks.${system}.pre-commit-check) shellHook;
 
-          buildInputs = self.checks.${system}.pre-commit-check.enabledPackages;
+          buildInputs = self.checks.${system}.pre-commit-check.enabledPackages ++ [
+            pkgs.go_1_22
+          ];
         };
 
         homeManagerModules.default =
