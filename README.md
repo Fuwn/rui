@@ -62,8 +62,11 @@ inputs.home-manager.lib.homeManagerConfiguration {
       # Rui falls back on the `FLAKE` environment variable if `flake` is unset
       flake = "/path/to/your-flake";
 
-      # Allow unfree packages; defaults to false
+      # Allow unfree packages on the global level; defaults to false
       allow-unfree = false;
+
+      # Allow insecure packages on the global level; defaults to false
+      allow-insecure = false;
 
       # Extra arguments to pass to `nixos-rebuild` and `home-manager`; defaults
       # to [ ]

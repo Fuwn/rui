@@ -11,12 +11,13 @@ import (
 )
 
 type Configuration struct {
-	Notify      bool     `json:"notify"`
-	Editor      string   `json:"editor"`
-	Flake       string   `json:"flake"`
-	Notifier    string   `json:"notifier"`
-	AllowUnfree bool     `json:"allow-unfree"`
-	ExtraArgs   []string `json:"extra-args"`
+	Notify        bool     `json:"notify"`
+	Editor        string   `json:"editor"`
+	Flake         string   `json:"flake"`
+	Notifier      string   `json:"notifier"`
+	AllowUnfree   bool     `json:"allow-unfree"`
+	AllowInsecure bool     `json:"allow-insecure"`
+	ExtraArgs     []string `json:"extra-args"`
 }
 
 type ActionDetails struct {
@@ -117,10 +118,26 @@ func main() {
 					return os.Setenv("NIXPKGS_ALLOW_UNFREE", state)
 				},
 			},
+			&cli.BoolFlag{
+				Name: "allow-insecure",
+				Action: func(c *cli.Context, b bool) error {
+					state := "0"
+
+					if b {
+						state = "1"
+					}
+
+					return os.Setenv("NIXPKGS_ALLOW_INSECURE", state)
+				},
+			},
 		},
 		Before: func(c *cli.Context) error {
 			if configuration.AllowUnfree {
 				c.Set("allow-unfree", "1")
+			}
+
+			if configuration.AllowInsecure {
+				c.Set("allow-insecure", "1")
 			}
 
 			return nil
