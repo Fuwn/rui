@@ -47,19 +47,24 @@
           platforms = platforms.linux;
         };
 
-        rui = pkgs.buildGoModule {
-          inherit meta;
+        rui =
+          pkgs.buildGo122Module.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
+            {
+              inherit meta;
 
-          pname = "rui";
-          version = "2024.10.04";
-          src = pkgs.lib.cleanSource ./.;
-          vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
+              pname = "rui";
+              version = "2024.10.04";
+              src = pkgs.lib.cleanSource ./.;
+              vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
+              buildInputs = [ pkgs.musl ];
 
-          ldflags = [
-            "-s"
-            "-w"
-          ];
-        };
+              ldflags = [
+                "-s"
+                "-w"
+                "-linkmode=external"
+                "-extldflags=-static"
+              ];
+            };
       in
       {
         packages = {
