@@ -49,7 +49,7 @@
 
         rui =
           pkgs.buildGo122Module.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
-            {
+            rec {
               inherit meta;
 
               pname = "rui";
@@ -63,6 +63,8 @@
                 "-w"
                 "-linkmode=external"
                 "-extldflags=-static"
+                "-X main.Version=${version}"
+                "-X main.Commit=${version}"
               ];
             };
       in
