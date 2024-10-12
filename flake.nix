@@ -53,7 +53,7 @@
               inherit meta;
 
               pname = "rui";
-              version = "2024.10.04";
+              version = "2024.10.12";
               src = pkgs.lib.cleanSource ./.;
               vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
               buildInputs = [ pkgs.musl ];
