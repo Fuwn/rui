@@ -87,7 +87,7 @@ func main() {
 		},
 	}
 
-	(&cli.App{
+	if err := (&cli.App{
 		Name:                 "rui",
 		Usage:                "Personal NixOS Flake Manager",
 		Description:          "Personal NixOS Flake Manager",
@@ -102,6 +102,7 @@ func main() {
 		ExitErrHandler: func(c *cli.Context, err error) {
 			if err != nil {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		},
 		Suggest: true,
@@ -227,7 +228,10 @@ func main() {
 				},
 			},
 		},
-	}).Run(os.Args)
+	}).Run(os.Args); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 func command(name string, args ...string) error {
