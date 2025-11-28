@@ -48,7 +48,7 @@
         };
 
         rui =
-          pkgs.buildGo122Module.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
+          pkgs.buildGo123Module.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
             rec {
               inherit meta;
 
