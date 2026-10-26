@@ -48,7 +48,7 @@
         };
 
         rui =
-          pkgs.buildGo123Module.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
+          pkgs.buildGoModule.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
             rec {
               inherit meta;
 
@@ -102,7 +102,7 @@
           inherit (self.checks.${system}.pre-commit-check) shellHook;
 
           buildInputs = self.checks.${system}.pre-commit-check.enabledPackages ++ [
-            pkgs.go_1_22
+            pkgs.go
           ];
         };
 
